@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Traverse.DbContexts;
 using Traverse.Models;
+using Traverse.Models.Records.Maps;
 using Traverse.Options;
 using Traverse.Providers;
 using Traverse.Providers.Impl;
 using Traverse.Repository;
 using Traverse.Repository.Impl;
 using Traverse.Services;
+using Traverse.Services.Graph.Impl;
 using Traverse.Services.Impl;
 using Traverse.Services.Maps;
 using Traverse.Services.Maps.Impl;
@@ -48,6 +50,7 @@ builder.Services.AddScoped<IRatingRepository, RatingRepository>();
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 
 builder.Services.AddHttpClient<IMapProvider<Event>, AppleMapsProvider>();
+builder.Services.AddScoped<IMapProvider<Event>, AppleMapsProvider>();
 
 builder.Services.AddMemoryCache();
 
@@ -57,7 +60,7 @@ builder.Services.AddOptions<MapsOptions>()
     .ValidateOnStart();
 
 builder.Services.AddSingleton<IMapTokenService<string>, AppleMapsTokenService>();
-builder.Services.AddScoped<IMapProvider<Event>, AppleMapsProvider>();
+builder.Services.AddSingleton<IOptimizationService<Event, EtaResult>, RouteOptimizationService>();
 
 
 var app = builder.Build();

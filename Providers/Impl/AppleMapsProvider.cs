@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Traverse.Models;
@@ -30,12 +32,23 @@ namespace Traverse.Providers.Impl
 
             nodeMap = nodes.ToDictionary(node => node.Id, node => nodes.Where(n => node.Id != n.Id));
 
-            foreach(Event eventNode in nodes)
+            Dictionary<string, string?> queryParams = [];
+            queryParams.Add("origin", string.Empty);
+            queryParams.Add("destination", string.Empty);
+
+
+            foreach (Event origin in nodes)
             {
-                string destinationStr = string.Join('|', nodeMap[eventNode.Id].Select(n => $"{n.Coordinates.X},{n.Coordinates.Y}" ));
-                string fullUri = $"{_options.EtaApi}?origin={eventNode.Coordinates.X},{eventNode.Coordinates.Y}&destinations={destinationStr}";
-                
-                tasks.Add(eventNode.Id, GetHttpResponseAsync<EtaWrapper>(fullUri));
+                var destinations = nodeMap[origin.Id];
+                queryParams["origin"] = $"{origin.Coordinates.X},{origin.Coordinates.Y}";
+
+                foreach (Event destination in destinations)
+                {
+                    queryParams["destination"] = $"{destination.Coordinates.X},{destination.Coordinates.Y}";
+                    string fullUri = QueryHelpers.AddQueryString(_options.EtaApi, queryParams);
+
+                    tasks.Add(origin.Id, GetHttpResponseAsync<EtaWrapper>(fullUri));
+                }
             }
 
             await Task.WhenAll(tasks.Values);
@@ -55,6 +68,9 @@ namespace Traverse.Providers.Impl
 
         private async Task<T> GetHttpResponseAsync<T>(string uri)
         {
+            var token = await _tokenService.GetTokenAsync(new Uri(_options.AuthApi));
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var response = await _httpClient.GetAsync(uri);
 
             response.EnsureSuccessStatusCode();
