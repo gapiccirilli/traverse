@@ -2,10 +2,9 @@ namespace Traverse.Models.Graph
 {
     public enum TransportMode
     {
-        Car,
+        Automobile,
         Walking,
         Cycling,
-        PublicTransit,
-        Flight
+        Transit
     }
 }

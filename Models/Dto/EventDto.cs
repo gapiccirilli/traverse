@@ -1,6 +1,6 @@
 using NetTopologySuite.Geometries;
 
-namespace Traverse.Models
+namespace Traverse.Models.Dto
 {
     public class EventDto
     {

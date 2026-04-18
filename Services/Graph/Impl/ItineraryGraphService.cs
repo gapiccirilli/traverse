@@ -1,17 +1,18 @@
+using Traverse.Models.Dto;
 using Traverse.Providers;
 using Traverse.Services.Graph;
 
 namespace Traverse.Models.Graph
 {
-    public class ItineraryGraphService : IGraphService<ItineraryGraph, Event, Transportation>
+    public class ItineraryGraphService : IGraphService<ItineraryGraph, EventDto, Transportation>
     {
-        private readonly IMapProvider<Event> _mapProvider;
-        public ItineraryGraphService(IMapProvider<Event> mapProvider)
+        private readonly IMapProvider<EventDto> _mapProvider;
+        public ItineraryGraphService(IMapProvider<EventDto> mapProvider)
         {
             _mapProvider = mapProvider;
         }
 
-        public ItineraryGraph BuildGraph(IEnumerable<Event> nodes, IEnumerable<Transportation> edges)
+        public ItineraryGraph BuildGraph(IEnumerable<EventDto> nodes, IEnumerable<Transportation> edges)
         {
             
             var graph = new ItineraryGraph();

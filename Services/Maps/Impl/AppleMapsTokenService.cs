@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Security.Authentication;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
@@ -16,12 +17,13 @@ namespace Traverse.Services.Maps.Impl
             _httpClient = httpClient;
             _cache = cache;
         }
-        public async Task<string> GetTokenAsync(Uri uri)
+        public async Task<string> GetTokenAsync(Uri uri, string refreshToken)
         {
             
             if (_cache.TryGetValue(CacheKey, out string token))
                 return token!;
 
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", refreshToken);
             var auth = await FetchTokenFromAppleMapsServiceAsync(uri);
             var expiration = auth.ExpiresInSeconds - 30;
             token = auth.AccessToken;

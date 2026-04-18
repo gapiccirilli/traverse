@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Traverse.Models;
+using Traverse.Models.Dto;
 using Traverse.Models.Records;
 using Traverse.Models.Records.Maps;
 using Traverse.Options;
@@ -13,10 +15,12 @@ namespace Traverse.Providers.Impl
     public class AppleMapsProvider : MapProviderBase<string>
     {
         private readonly MapsOptions _options;
-        public AppleMapsProvider(HttpClient httpClient, IOptions<MapsOptions> options, IMapTokenService<string> tokenService) : base(httpClient, tokenService)
+        private readonly ILogger _logger;
+        public AppleMapsProvider(HttpClient httpClient, IOptions<MapsOptions> options, IMapTokenService<string> tokenService, ILogger<AppleMapsProvider> logger) : base(httpClient, tokenService)
         {
             _options = options.Value;
             _httpClient.BaseAddress = new Uri(_options.BaseUri);
+            _logger = logger;
         }
 
         public async override Task<GeocodeResult> GeocodeAsync(string address)
@@ -24,11 +28,11 @@ namespace Traverse.Providers.Impl
             throw new NotImplementedException();
         }
 
-        public async override Task<Dictionary<long, IEnumerable<EtaResult>>> GetEtasAsync(IEnumerable<Event> nodes)
+        public async override Task<Dictionary<long, IEnumerable<EtaWrapper>>> GetEtasAsync(IEnumerable<EventDto> nodes)
         {
-            Dictionary<long, IEnumerable<EtaResult>> etas = [];
-            Dictionary<long, IEnumerable<Event>> nodeMap = [];
-            Dictionary<long, Task<EtaWrapper>> tasks = [];
+            Dictionary<long, IEnumerable<EtaWrapper>> etas = [];
+            Dictionary<long, IEnumerable<EventDto>> nodeMap = [];
+            Dictionary<long, List<Task<EtaWrapper>>> tasks = [];
 
             nodeMap = nodes.ToDictionary(node => node.Id, node => nodes.Where(n => node.Id != n.Id));
 
@@ -37,25 +41,33 @@ namespace Traverse.Providers.Impl
             queryParams.Add("destination", string.Empty);
 
 
-            foreach (Event origin in nodes)
+            foreach (EventDto origin in nodes)
             {
                 var destinations = nodeMap[origin.Id];
-                queryParams["origin"] = $"{origin.Coordinates.X},{origin.Coordinates.Y}";
 
-                foreach (Event destination in destinations)
+                string originQuery = $"{origin.Coordinates.Latitude},{origin.Coordinates.Longitude}";
+
+                tasks.Add(origin.Id, []);
+
+                foreach (EventDto destination in destinations)
                 {
-                    queryParams["destination"] = $"{destination.Coordinates.X},{destination.Coordinates.Y}";
-                    string fullUri = QueryHelpers.AddQueryString(_options.EtaApi, queryParams);
+                    string destinationsQuery = $"{destination.Coordinates.Latitude},{destination.Coordinates.Longitude}";
+                    string fullUri = $"{_options.EtaApi}?origin={originQuery}&destinations={destinationsQuery}";
 
-                    tasks.Add(origin.Id, GetHttpResponseAsync<EtaWrapper>(fullUri));
+                    tasks[origin.Id].Add(GetHttpResponseAsync<EtaWrapper>(fullUri).ContinueWith(task =>
+                    {
+                        task.Result.EventId = destination.Id;
+                        return task.Result;
+                    }));
                 }
             }
+            
+            await Task.WhenAll(tasks.Values.SelectMany(t => t));
 
-            await Task.WhenAll(tasks.Values);
-
-            foreach(KeyValuePair<long, Task<EtaWrapper>> entry in tasks)
+            foreach(KeyValuePair<long, List<Task<EtaWrapper>>> entry in tasks)
             {
-                etas.Add(entry.Key, entry.Value.Result.Etas);
+                IEnumerable<EtaWrapper> results = entry.Value.Select(resultTask => resultTask.Result);
+                etas.Add(entry.Key, results);
             }
 
             return etas;
@@ -68,10 +80,13 @@ namespace Traverse.Providers.Impl
 
         private async Task<T> GetHttpResponseAsync<T>(string uri)
         {
-            var token = await _tokenService.GetTokenAsync(new Uri(_options.AuthApi));
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var response = await _httpClient.GetAsync(uri);
+            var token = await _tokenService.GetTokenAsync(new Uri($"{_options.BaseUri}{_options.AuthApi}"), _options.RefreshToken);
+
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _httpClient.SendAsync(request);
 
             response.EnsureSuccessStatusCode();
 

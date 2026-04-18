@@ -1,11 +1,16 @@
+using Traverse.Models.Dto;
+
 namespace Traverse.Models.Graph
 {
     public class ItineraryGraph
     {
-        private readonly Dictionary<long, Event> _nodes = [];
+        private readonly Dictionary<long, EventDto> _nodes = [];
         private readonly Dictionary<long, List<Transportation>> _edges = [];
 
-        public void AddNode(Event node)
+        public Dictionary<long, EventDto> Nodes { get { return _nodes; } }
+        public Dictionary<long, List<Transportation>> Edges { get { return _edges; } }
+
+        public void AddNode(EventDto node)
         {
             _nodes[node.Id] = node;
             _edges[node.Id] = [];
@@ -16,7 +21,7 @@ namespace Traverse.Models.Graph
             _edges[edge.FromEventId].Add(edge);
         }
 
-        public Event? GetNode(long eventId)
+        public EventDto? GetNode(long eventId)
         {
             return _nodes.TryGetValue(eventId, out var node) ? node : null;
         }

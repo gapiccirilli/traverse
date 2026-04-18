@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Traverse.Models;
+using Traverse.Models.Dto;
 using Traverse.Services;
-using Traverse.Services.Timezone;
 
 namespace Traverse.Controllers
 {

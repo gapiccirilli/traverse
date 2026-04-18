@@ -1,5 +1,6 @@
 using NetTopologySuite.Geometries;
 using Traverse.Models;
+using Traverse.Models.Dto;
 
 namespace Traverse.Utility.Impl
 {

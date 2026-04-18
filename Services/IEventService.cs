@@ -1,4 +1,5 @@
 using Traverse.Models;
+using Traverse.Models.Dto;
 
 namespace Traverse.Services
 {
