@@ -3,9 +3,9 @@ using Traverse.Models.Records.Maps;
 
 namespace Traverse.Providers
 {
-    public interface IMapProvider<T>
+    public interface IMapProvider<T, R>
     {
-        Task<Dictionary<long, IEnumerable<EtaWrapper>>> GetEtasAsync(IEnumerable<T> nodes);
+        Task<IEnumerable<R>> GetEtasAsync(T origin, IEnumerable<T> nodes);
         Task<RouteResult> GetRoutesAsync(Coordinate origin, Coordinate destination);
         Task<GeocodeResult> GeocodeAsync(string address);
     }

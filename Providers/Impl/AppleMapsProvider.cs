@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.WebUtilities;
@@ -5,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Traverse.Models;
 using Traverse.Models.Dto;
+using Traverse.Models.Graph;
 using Traverse.Models.Records;
 using Traverse.Models.Records.Maps;
 using Traverse.Options;
@@ -28,49 +30,57 @@ namespace Traverse.Providers.Impl
             throw new NotImplementedException();
         }
 
-        public async override Task<Dictionary<long, IEnumerable<EtaWrapper>>> GetEtasAsync(IEnumerable<EventDto> nodes)
+        public async override Task<IEnumerable<Transportation>> GetEtasAsync(EventDto origin, IEnumerable<EventDto> nodes)
         {
-            Dictionary<long, IEnumerable<EtaWrapper>> etas = [];
-            Dictionary<long, IEnumerable<EventDto>> nodeMap = [];
-            Dictionary<long, List<Task<EtaWrapper>>> tasks = [];
 
-            nodeMap = nodes.ToDictionary(node => node.Id, node => nodes.Where(n => node.Id != n.Id));
-
-            Dictionary<string, string?> queryParams = [];
-            queryParams.Add("origin", string.Empty);
-            queryParams.Add("destination", string.Empty);
-
-
-            foreach (EventDto origin in nodes)
+            if (!nodes.Any())
             {
-                var destinations = nodeMap[origin.Id];
+                return [];
+            }
 
-                string originQuery = $"{origin.Coordinates.Latitude},{origin.Coordinates.Longitude}";
+            List<Task<EtaWrapper>> tasks = [];
+            List<Transportation> edges = [];
 
-                tasks.Add(origin.Id, []);
+            string originQuery = $"{origin.Coordinates.Latitude},{origin.Coordinates.Longitude}";
 
-                foreach (EventDto destination in destinations)
+            foreach (EventDto eventNode in nodes)
+            {
+
+                string destinationsQuery = $"{eventNode.Coordinates.Latitude},{eventNode.Coordinates.Longitude}";
+                string fullUri = $"{_options.EtaApi}?origin={originQuery}&destinations={destinationsQuery}";
+
+                tasks.Add(GetHttpResponseAsync<EtaWrapper>(fullUri).ContinueWith(task =>
                 {
-                    string destinationsQuery = $"{destination.Coordinates.Latitude},{destination.Coordinates.Longitude}";
-                    string fullUri = $"{_options.EtaApi}?origin={originQuery}&destinations={destinationsQuery}";
-
-                    tasks[origin.Id].Add(GetHttpResponseAsync<EtaWrapper>(fullUri).ContinueWith(task =>
-                    {
-                        task.Result.EventId = destination.Id;
-                        return task.Result;
-                    }));
-                }
+                    task.Result.EventId = eventNode.Id;
+                    return task.Result;
+                }));
             }
             
-            await Task.WhenAll(tasks.Values.SelectMany(t => t));
+            await Task.WhenAll(tasks);
 
-            foreach(KeyValuePair<long, List<Task<EtaWrapper>>> entry in tasks)
+            foreach(var task in tasks)
             {
-                IEnumerable<EtaWrapper> results = entry.Value.Select(resultTask => resultTask.Result);
-                etas.Add(entry.Key, results);
+                var etas = task.Result.Etas;
+
+                if (!etas.Any())
+                {
+                    throw new InvalidOperationException($"An eta result was expected from {nameof(AppleMapsProvider)} between " +
+                        $"origin {origin.Id} and destination {task.Result.EventId} but there were no results returned");
+                }
+                
+                var etaResult = etas.First();
+
+                edges.Add(new Transportation()
+                {
+                    FromEventId = origin.Id,
+                    ToEventId = task.Result.EventId,
+                    WeightSeconds = etaResult.ExpectedTravelTimeSeconds,
+                    Distance = etaResult.DistanceMeters,
+                    DistanceUnit = DistanceUnit.Meters
+                });
             }
 
-            return etas;
+            return edges.AsEnumerable();
         }
 
         public async override Task<RouteResult> GetRoutesAsync(Coordinate origin, Coordinate destination)

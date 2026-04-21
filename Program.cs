@@ -1,3 +1,5 @@
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Traverse.DbContexts;
 using Traverse.Models;
@@ -34,6 +36,12 @@ builder.Services.AddDbContext<CoreDbContext>(options => {
     options.UseSnakeCaseNamingConvention();
 });
 
+builder.Services.AddHangfireServer();
+
+builder.Services.AddHangfire(config => 
+    config.UsePostgreSqlStorage(options => options.UseNpgsqlConnection(travConnString))
+);
+
 // converts exceptions to problem details responses when useExceptionHandler is used without path
 builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
@@ -52,8 +60,8 @@ builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<IRatingRepository, RatingRepository>();
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 
-builder.Services.AddHttpClient<IMapProvider<EventDto>, AppleMapsProvider>();
-builder.Services.AddScoped<IMapProvider<EventDto>, AppleMapsProvider>();
+builder.Services.AddHttpClient<IMapProvider<EventDto, Transportation>, AppleMapsProvider>();
+builder.Services.AddScoped<IMapProvider<EventDto, Transportation>, AppleMapsProvider>();
 
 
 builder.Services.AddMemoryCache();
@@ -64,6 +72,7 @@ builder.Services.AddOptions<MapsOptions>()
     .ValidateOnStart();
 
 builder.Services.AddSingleton<IMapTokenService<string>, AppleMapsTokenService>();
+builder.Services.AddScoped<IEdgeService<EventDto, Transportation>, TransportationEdgeService>();
 builder.Services.AddScoped<IGraphService<ItineraryGraph, EventDto, Transportation>, ItineraryGraphService>();
 builder.Services.AddScoped<IOptimizationService<long, ItineraryGraph>, RouteOptimizationService>();
 
@@ -77,6 +86,8 @@ if (!app.Environment.IsDevelopment())
 
 // converts non-success status codes to problem details responses
 app.UseStatusCodePages();
+
+app.UseHangfireDashboard("/hangfire");
 
 // app.MapGet("/", () => app.Configuration.AsEnumerable());
 

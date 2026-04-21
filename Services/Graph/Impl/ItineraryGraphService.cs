@@ -6,10 +6,10 @@ namespace Traverse.Models.Graph
 {
     public class ItineraryGraphService : IGraphService<ItineraryGraph, EventDto, Transportation>
     {
-        private readonly IMapProvider<EventDto> _mapProvider;
-        public ItineraryGraphService(IMapProvider<EventDto> mapProvider)
+        // private readonly IMapProvider<EventDto> _mapProvider;
+        public ItineraryGraphService()
         {
-            _mapProvider = mapProvider;
+            // _mapProvider = mapProvider;
         }
 
         public ItineraryGraph BuildGraph(IEnumerable<EventDto> nodes, IEnumerable<Transportation> edges)

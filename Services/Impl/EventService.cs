@@ -1,21 +1,26 @@
-using Traverse.Models;
+using Hangfire;
 using Traverse.Models.Dto;
+using Traverse.Models.Graph;
 using Traverse.Repository;
+using Traverse.Services.Graph;
 using Traverse.Services.Timezone;
 using Traverse.Utility.Impl;
 
 namespace Traverse.Services.Impl
 {
-    internal class EventService(IEventRepository eventRepository, ITimeZoneService timeZoneService) : IEventService
+    internal class EventService(IEventRepository eventRepository, ITimeZoneService timeZoneService, IBackgroundJobClient etaJobClient) : IEventService
     {
         private readonly IEventRepository _eventRepository = eventRepository;
         private readonly ITimeZoneService _timeZoneService = timeZoneService;
+        private readonly IBackgroundJobClient _etaJobClient = etaJobClient;
 
         public async Task<EventDto> CreateEventAsync(long itineraryId, EventDto newEvent)
         {
             newEvent.ItineraryId = itineraryId;
             
             newEvent.EventTimeZone = await _timeZoneService.GetTimeZoneAsync(newEvent.Coordinates.Latitude, newEvent.Coordinates.Longitude);
+
+            _etaJobClient.Enqueue<IEdgeService<EventDto, Transportation>>(service => service.BuildEdgesAsync(newEvent, itineraryId));
             
             return EventMapper.MapFrom(await _eventRepository.CreateEventAsync(itineraryId, EventMapper.MapTo(newEvent)));
         }

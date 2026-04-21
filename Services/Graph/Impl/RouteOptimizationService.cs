@@ -10,29 +10,30 @@ namespace Traverse.Services.Graph.Impl
 {
     public class RouteOptimizationService : IOptimizationService<long, ItineraryGraph>
     {
-        private readonly IMapProvider<EventDto> _mapProvider;
+        // private readonly IMapProvider<EventDto> _mapProvider;
         private readonly IEventService _eventService;
         private readonly IGraphService<ItineraryGraph, EventDto, Transportation> _itineraryGraphService;
-        public RouteOptimizationService(IMapProvider<EventDto> mapProvider, IEventService eventService, IGraphService<ItineraryGraph, EventDto, Transportation> itineraryGraphService)
+        public RouteOptimizationService()
         {
-            _mapProvider = mapProvider;
-            _eventService = eventService;
-            _itineraryGraphService = itineraryGraphService;
+            // _mapProvider = mapProvider;
+            // _eventService = eventService;
+            // _itineraryGraphService = itineraryGraphService;
         }
 
         public async Task<ItineraryGraph> Optimize(long optParam)
         {
-            IEnumerable<EventDto> events = await _eventService.GetAllEventsAsync(optParam);
-            Dictionary<long, IEnumerable<EtaWrapper>> etaResults = await _mapProvider.GetEtasAsync(events);
+            // IEnumerable<EventDto> events = await _eventService.GetAllEventsAsync(optParam);
+            // Dictionary<long, IEnumerable<EtaWrapper>> etaResults = await _mapProvider.GetEtasAsync(events);
 
-            // 1. Inject ItineraryGraphService -- DONE
-            // 2. Use etaResults to build out edges (Transportation objects) by finding shortest time between nodes and select that destination node
-            IEnumerable<Transportation> edges = BuildRouteEdges(etaResults);
-            // 3. Pass in event nodes and transportation edges into BuildGraph()
-            return _itineraryGraphService.BuildGraph(events, edges);
-            // 4. Implement GetGraph
-            // 5. Return ItineraryGraph
-            // return await ;
+            // // 1. Inject ItineraryGraphService -- DONE
+            // // 2. Use etaResults to build out edges (Transportation objects) by finding shortest time between nodes and select that destination node
+            // IEnumerable<Transportation> edges = BuildRouteEdges(etaResults);
+            // // 3. Pass in event nodes and transportation edges into BuildGraph()
+            // return _itineraryGraphService.BuildGraph(events, edges);
+            // // 4. Implement GetGraph
+            // // 5. Return ItineraryGraph
+            // // return await ;
+            return new ItineraryGraph();
         }
 
         private IEnumerable<Transportation> BuildRouteEdges(Dictionary<long, IEnumerable<EtaWrapper>> routeEtas)
