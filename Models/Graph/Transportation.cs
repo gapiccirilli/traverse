@@ -9,5 +9,6 @@ namespace Traverse.Models.Graph
         public TransportMode TransportMode { get; set; }
         public double Distance { get; set; }
         public DistanceUnit DistanceUnit { get; set; }
+        public long ItineraryId { get; set; }
     }
 }

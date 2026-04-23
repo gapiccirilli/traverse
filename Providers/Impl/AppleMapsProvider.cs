@@ -47,11 +47,20 @@ namespace Traverse.Providers.Impl
             {
 
                 string destinationsQuery = $"{eventNode.Coordinates.Latitude},{eventNode.Coordinates.Longitude}";
-                string fullUri = $"{_options.EtaApi}?origin={originQuery}&destinations={destinationsQuery}";
+                string originToDestinationUri = $"{_options.EtaApi}?origin={originQuery}&destinations={destinationsQuery}";
+                string destinationToOriginUri = $"{_options.EtaApi}?origin={destinationsQuery}&destinations={originQuery}";
 
-                tasks.Add(GetHttpResponseAsync<EtaWrapper>(fullUri).ContinueWith(task =>
+                tasks.Add(GetHttpResponseAsync<EtaWrapper>(originToDestinationUri).ContinueWith(task =>
                 {
-                    task.Result.EventId = eventNode.Id;
+                    task.Result.FromEventId = origin.Id;
+                    task.Result.ToEventId = eventNode.Id;
+                    return task.Result;
+                }));
+
+                tasks.Add(GetHttpResponseAsync<EtaWrapper>(destinationToOriginUri).ContinueWith(task =>
+                {
+                    task.Result.FromEventId = eventNode.Id;
+                    task.Result.ToEventId = origin.Id;
                     return task.Result;
                 }));
             }
@@ -65,18 +74,19 @@ namespace Traverse.Providers.Impl
                 if (!etas.Any())
                 {
                     throw new InvalidOperationException($"An eta result was expected from {nameof(AppleMapsProvider)} between " +
-                        $"origin {origin.Id} and destination {task.Result.EventId} but there were no results returned");
+                        $"origin {task.Result.FromEventId} and destination {task.Result.ToEventId} but there were no results returned");
                 }
                 
                 var etaResult = etas.First();
 
                 edges.Add(new Transportation()
                 {
-                    FromEventId = origin.Id,
-                    ToEventId = task.Result.EventId,
+                    FromEventId = task.Result.FromEventId,
+                    ToEventId = task.Result.ToEventId,
                     WeightSeconds = etaResult.ExpectedTravelTimeSeconds,
                     Distance = etaResult.DistanceMeters,
-                    DistanceUnit = DistanceUnit.Meters
+                    DistanceUnit = DistanceUnit.Meters,
+                    ItineraryId = origin.ItineraryId
                 });
             }
 
