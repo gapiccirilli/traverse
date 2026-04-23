@@ -1,11 +1,10 @@
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using Traverse.DbContexts;
-using Traverse.Models;
 using Traverse.Models.Dto;
 using Traverse.Models.Graph;
-using Traverse.Models.Records.Maps;
 using Traverse.Options;
 using Traverse.Providers;
 using Traverse.Providers.Impl;
@@ -14,6 +13,8 @@ using Traverse.Repository.Graph;
 using Traverse.Repository.Graph.Impl;
 using Traverse.Repository.Impl;
 using Traverse.Services;
+using Traverse.Services.Cache;
+using Traverse.Services.Cache.Impl;
 using Traverse.Services.Graph;
 using Traverse.Services.Graph.Impl;
 using Traverse.Services.Impl;
@@ -38,6 +39,11 @@ builder.Services.AddDbContext<CoreDbContext>(options => {
     options.UseSnakeCaseNamingConvention();
 });
 
+var redisConnString = builder.Configuration.GetConnectionString("Redis") 
+    ?? throw new RedisConnectionException(ConnectionFailureType.UnableToConnect, "Could not obtain Redis Connection String");
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(redisConnString));
+    
 builder.Services.AddHangfireServer();
 
 builder.Services.AddHangfire(config => 
@@ -67,6 +73,7 @@ builder.Services.AddScoped<IMapProvider<EventDto, Transportation>, AppleMapsProv
 
 
 builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 
 builder.Services.AddOptions<MapsOptions>()
     .Bind(builder.Configuration.GetSection("MapsApi:Apple"))
