@@ -38,30 +38,30 @@ namespace Traverse.Services.Graph.Impl
 
         private IEnumerable<Transportation> BuildRouteEdges(Dictionary<long, IEnumerable<EtaWrapper>> routeEtas)
         {
-            
-            return routeEtas
-                .Where(entry => entry.Value?.Any() == true)
-                .Select(entry =>
-                {
-                    var closestEvent = entry.Value.MinBy(w => w.Etas?.FirstOrDefault()?.ExpectedTravelTimeSeconds ?? double.MaxValue);
+            return [];
+            // return routeEtas
+            //     .Where(entry => entry.Value?.Any() == true)
+            //     .Select(entry =>
+            //     {
+            //         var closestEvent = entry.Value.MinBy(w => w.Etas?.FirstOrDefault()?.ExpectedTravelTimeSeconds ?? double.MaxValue);
 
-                    var bestEta = closestEvent?.Etas?.FirstOrDefault();
+            //         var bestEta = closestEvent?.Etas?.FirstOrDefault();
 
-                    if (bestEta == null)
-                    {
-                        throw new InvalidOperationException($"Event {entry.Key} has no valid ETA segments.");
-                    }
+            //         if (bestEta == null)
+            //         {
+            //             throw new InvalidOperationException($"Event {entry.Key} has no valid ETA segments.");
+            //         }
 
-                    return new Transportation
-                    {
-                        FromEventId = entry.Key,
-                        ToEventId = closestEvent.EventId,
-                        WeightSeconds = bestEta.ExpectedTravelTimeSeconds,
-                        TransportMode = TransportMode.Automobile,
-                        Distance = bestEta.DistanceMeters,
-                        DistanceUnit = DistanceUnit.Meters
-                    };
-                });
+            //         return new Transportation
+            //         {
+            //             FromEventId = entry.Key,
+            //             ToEventId = closestEvent.EventId,
+            //             WeightSeconds = bestEta.ExpectedTravelTimeSeconds,
+            //             TransportMode = TransportMode.Automobile,
+            //             Distance = bestEta.DistanceMeters,
+            //             DistanceUnit = DistanceUnit.Meters
+            //         };
+            //     });
 
         }
     }

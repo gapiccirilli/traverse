@@ -1,6 +1,7 @@
 using Traverse.Models.Dto;
 using Traverse.Models.Graph;
 using Traverse.Providers;
+using Traverse.Repository.Graph;
 
 namespace Traverse.Services.Graph.Impl
 {
@@ -8,11 +9,14 @@ namespace Traverse.Services.Graph.Impl
     {
         private readonly IMapProvider<EventDto, Transportation> _mapProvider;
         private readonly IEventService _eventService;
+        private readonly IEdgeRepository<Transportation> _edgeRepository;
 
-        public TransportationEdgeService(IMapProvider<EventDto, Transportation> mapProvider, IEventService eventService)
+        public TransportationEdgeService(IMapProvider<EventDto, Transportation> mapProvider, IEventService eventService, 
+               IEdgeRepository<Transportation> edgeRepository)
         {
             _mapProvider = mapProvider;
             _eventService = eventService;
+            _edgeRepository = edgeRepository;
         }
 
         public async Task BuildEdgesAsync(IEnumerable<EventDto> nodes)
@@ -29,7 +33,7 @@ namespace Traverse.Services.Graph.Impl
             if (!edges.Any())
                 return;
             
-            
+            await _edgeRepository.SaveEdgesAsync(edges);
         }
     }
 }

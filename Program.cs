@@ -10,6 +10,8 @@ using Traverse.Options;
 using Traverse.Providers;
 using Traverse.Providers.Impl;
 using Traverse.Repository;
+using Traverse.Repository.Graph;
+using Traverse.Repository.Graph.Impl;
 using Traverse.Repository.Impl;
 using Traverse.Services;
 using Traverse.Services.Graph;
@@ -73,6 +75,7 @@ builder.Services.AddOptions<MapsOptions>()
 
 builder.Services.AddSingleton<IMapTokenService<string>, AppleMapsTokenService>();
 builder.Services.AddScoped<IEdgeService<EventDto, Transportation>, TransportationEdgeService>();
+builder.Services.AddScoped<IEdgeRepository<Transportation>, TransportationEdgeRepository>();
 builder.Services.AddScoped<IGraphService<ItineraryGraph, EventDto, Transportation>, ItineraryGraphService>();
 builder.Services.AddScoped<IOptimizationService<long, ItineraryGraph>, RouteOptimizationService>();
 
