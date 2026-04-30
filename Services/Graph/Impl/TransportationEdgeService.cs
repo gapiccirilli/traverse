@@ -12,7 +12,7 @@ namespace Traverse.Services.Graph.Impl
         private readonly IEventService _eventService;
         private readonly IEdgeRepository<Transportation> _edgeRepository;
         private readonly ICacheService _cacheService;
-
+        private const string TRANSPORT_CACHE_KEY = "itinerary:{0}:transportation";
         private static readonly TimeSpan EDGE_CACHE_EXPIRY = new(1, 0, 0);
 
         public TransportationEdgeService(IMapProvider<EventDto, Transportation> mapProvider, IEventService eventService, 
@@ -24,13 +24,10 @@ namespace Traverse.Services.Graph.Impl
             _cacheService = cacheService;
         }
 
-        public async Task BuildEdgesAsync(IEnumerable<EventDto> nodes)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task BuildEdgesAsync(EventDto node, long id)
         {
+            var cacheKey = string.Format(TRANSPORT_CACHE_KEY, id);
+
             IEnumerable<EventDto> eventNodes = await _eventService.GetAllEventsAsync(id);
 
             IEnumerable<Transportation> edges = await _mapProvider.GetEtasAsync(node, eventNodes.Where(n => n.Id != node.Id));
@@ -38,8 +35,23 @@ namespace Traverse.Services.Graph.Impl
             if (!edges.Any())
                 return;
             
-            await _cacheService.SetAsync<IEnumerable<Transportation>>("", edges, EDGE_CACHE_EXPIRY);
+            await _cacheService.SetAsync(cacheKey, edges, EDGE_CACHE_EXPIRY);
             await _edgeRepository.SaveEdgesAsync(edges);
+        }
+
+        public async Task<IEnumerable<Transportation>> GetEdges(long id)
+        {
+            var cacheKey = string.Format(TRANSPORT_CACHE_KEY, id);
+
+            var edges = await _cacheService.GetAsync<IEnumerable<Transportation>>(cacheKey);
+
+            if (edges != null)
+                return edges;
+            
+            edges = await _edgeRepository.GetEdgesAsync(id);
+            await _cacheService.SetAsync(cacheKey, edges, EDGE_CACHE_EXPIRY);
+
+            return edges;
         }
     }
 }
