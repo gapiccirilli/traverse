@@ -12,6 +12,7 @@ namespace Traverse.Models.Dto
         public string EventTimeZone { get; set; }
         public bool IsTransportation { get; set; }
         public short? Duration { get; set; }
+        public short UserDefinedOrder { get; set; }
         public long ItineraryId { get; set; }
 
         public EventDto()
@@ -30,7 +31,7 @@ namespace Traverse.Models.Dto
             this.EventDate = eventDate;
             this.EventTimeZone = timeZone;
         }
-        public EventDto(int id,string eventName, string location, Records.Coordinate coordinates, DateTime eventDate, string timeZone, short duration, long itineraryId)
+        public EventDto(int id,string eventName, string location, Records.Coordinate coordinates, DateTime eventDate, string timeZone, short duration, short userDefinedOrder, long itineraryId)
         {
             this.Id = id;
             this.EventName = eventName;
@@ -38,6 +39,7 @@ namespace Traverse.Models.Dto
             this.Coordinates = coordinates;
             this.EventDate = eventDate;
             this.Duration = duration;
+            this.UserDefinedOrder = userDefinedOrder;
             this.ItineraryId = itineraryId;
             this.EventTimeZone = timeZone;
         }

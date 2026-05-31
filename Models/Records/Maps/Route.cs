@@ -5,7 +5,7 @@ namespace Traverse.Models.Records.Maps
         int DistanceMeters,
         int DurationSeconds,
         string TransportType,
-        int[] StepIndexes,
+        IReadOnlyList<int> StepIndexes,
         bool HasTolls
     );
 
@@ -13,10 +13,10 @@ namespace Traverse.Models.Records.Maps
         int StepPathIndex,
         int DistanceMeters,
         int DurationSeconds,
-        string Instructions
+        string? Instructions
     );
 
     public record StepPath(
-        Coordinate Coordinate
+        IReadOnlyList<IReadOnlyList<Coordinate>> PathCoordinates
     );
 }

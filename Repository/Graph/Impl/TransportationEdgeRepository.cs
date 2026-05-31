@@ -19,5 +19,11 @@ namespace Traverse.Repository.Graph.Impl
             _coreContext.Add(edges);
             await _coreContext.SaveChangesAsync();
         }
+
+        public async Task SaveEdgeAsync(Transportation edge)
+        {
+            _coreContext.Add(edge);
+            await _coreContext.SaveChangesAsync();
+        }
     }
 }

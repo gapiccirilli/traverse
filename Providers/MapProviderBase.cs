@@ -20,8 +20,10 @@ namespace Traverse.Providers
         
         public abstract Task<GeocodeResult> GeocodeAsync(string address);
 
-        public abstract Task<IEnumerable<Transportation>> GetEtasAsync(EventDto origin, IEnumerable<EventDto> nodes);
+        public abstract Task<Transportation> GetEtasAsync(EventDto currentNode, EventDto previousNode);
 
         public abstract Task<RouteResult> GetRoutesAsync(Coordinate origin, Coordinate destination);
+
+        public abstract Task<IEnumerable<Transportation>> OptimizeAsync(EventDto origin, IEnumerable<EventDto> nodes);
     }
 }

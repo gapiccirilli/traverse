@@ -30,9 +30,42 @@ namespace Traverse.Providers.Impl
             throw new NotImplementedException();
         }
 
-        public async override Task<IEnumerable<Transportation>> GetEtasAsync(EventDto origin, IEnumerable<EventDto> nodes)
+        public async override Task<Transportation> GetEtasAsync(EventDto currentNode, EventDto previousNode)
         {
+            string originQuery = $"{previousNode.Coordinates.Latitude},{previousNode.Coordinates.Longitude}";
+            string destinationsQuery = $"{currentNode.Coordinates.Latitude},{currentNode.Coordinates.Longitude}";
+            string uri = $"{_options.EtaApi}?origin={originQuery}&destinations={destinationsQuery}";
 
+            var wrapper = await GetHttpResponseAsync<EtaWrapper>(uri);
+
+            var etas = wrapper.Etas;
+
+                if (!etas.Any())
+                {
+                    throw new InvalidOperationException($"An eta result was expected from {nameof(AppleMapsProvider)} between " +
+                        $"origin {previousNode.Id} and destination {currentNode.Id} but there were no results returned");
+                }
+                
+                var etaResult = etas.First();
+
+            return new Transportation()
+                {
+                    FromEventId = previousNode.Id,
+                    ToEventId = currentNode.Id,
+                    WeightSeconds = etaResult.ExpectedTravelTimeSeconds,
+                    Distance = etaResult.DistanceMeters,
+                    DistanceUnit = DistanceUnit.Meters,
+                    ItineraryId = previousNode.ItineraryId
+                };
+        }
+
+        public async override Task<RouteResult> GetRoutesAsync(Coordinate origin, Coordinate destination)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async override Task<IEnumerable<Transportation>> OptimizeAsync(EventDto origin, IEnumerable<EventDto> nodes)
+        {
             if (!nodes.Any())
             {
                 return [];
@@ -91,11 +124,6 @@ namespace Traverse.Providers.Impl
             }
 
             return edges.AsEnumerable();
-        }
-
-        public async override Task<RouteResult> GetRoutesAsync(Coordinate origin, Coordinate destination)
-        {
-            throw new NotImplementedException();
         }
 
         private async Task<T> GetHttpResponseAsync<T>(string uri)

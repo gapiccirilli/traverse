@@ -6,6 +6,7 @@ namespace Traverse.Services
     public interface IEventService
     {
         Task<EventDto> GetEventByIdAsync(long itineraryId, long eventId);
+        Task<EventDto> GetMostRecentEventAsync(long itineraryId);
         Task<IEnumerable<EventDto>> GetAllEventsAsync(long itineraryId);
         Task<EventDto> CreateEventAsync(long itineraryId, EventDto newEvent);
         Task<EventDto> UpdateEventAsync(long itineraryId, long eventId, EventDto updatedEvent);

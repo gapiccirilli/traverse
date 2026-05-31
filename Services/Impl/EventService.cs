@@ -1,4 +1,5 @@
 using Hangfire;
+using Traverse.Models;
 using Traverse.Models.Dto;
 using Traverse.Models.Graph;
 using Traverse.Repository;
@@ -8,10 +9,11 @@ using Traverse.Utility.Impl;
 
 namespace Traverse.Services.Impl
 {
-    internal class EventService(IEventRepository eventRepository, ITimeZoneService timeZoneService, IBackgroundJobClient etaJobClient) : IEventService
+    internal class EventService(IEventRepository eventRepository, ITimeZoneService timeZoneService, IEdgeService<EventDto, Transportation> transporationEdgeServce, IBackgroundJobClient etaJobClient) : IEventService
     {
         private readonly IEventRepository _eventRepository = eventRepository;
         private readonly ITimeZoneService _timeZoneService = timeZoneService;
+        private readonly IEdgeService<EventDto, Transportation> _transporationEdgeServce = transporationEdgeServce;
         private readonly IBackgroundJobClient _etaJobClient = etaJobClient;
 
         public async Task<EventDto> CreateEventAsync(long itineraryId, EventDto newEvent)
@@ -21,6 +23,8 @@ namespace Traverse.Services.Impl
             newEvent.EventTimeZone = await _timeZoneService.GetTimeZoneAsync(newEvent.Coordinates.Latitude, newEvent.Coordinates.Longitude);
 
             _etaJobClient.Enqueue<IEdgeService<EventDto, Transportation>>(service => service.BuildEdgesAsync(newEvent, itineraryId));
+
+            await _transporationEdgeServce.BuildEdgeAsync(newEvent, itineraryId);
             
             return EventMapper.MapFrom(await _eventRepository.CreateEventAsync(itineraryId, EventMapper.MapTo(newEvent)));
         }
@@ -39,6 +43,11 @@ namespace Traverse.Services.Impl
         public async Task<EventDto> GetEventByIdAsync(long itineraryId, long eventId)
         {
             return EventMapper.MapFrom(await _eventRepository.GetEventByIdAsync(itineraryId, eventId));
+        }
+
+        public async Task<EventDto> GetMostRecentEventAsync(long itineraryId)
+        {
+            return EventMapper.MapFrom(await _eventRepository.GetMostRecentEventAsync(itineraryId));
         }
 
         public async Task<EventDto> PatchEventAsync(long itineraryId, long eventId, EventDto updatedEvent)
