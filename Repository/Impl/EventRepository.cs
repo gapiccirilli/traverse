@@ -40,12 +40,13 @@ namespace Traverse.Repository.Impl
                         .SingleOrDefaultAsync() ?? throw new KeyNotFoundException($"Event with ID {eventId} and Itinerary ID {itineraryId} not found.");
         }
 
-        public async Task<Event> GetMostRecentEventAsync(long itineraryId)
+        public async Task<Event?> GetMostRecentEventAsync(long itineraryId)
         {
             return await _coreContext.Events
                          .Where(e => e.ItineraryId == itineraryId)
                          .OrderByDescending(o => o.UserDefinedOrder)
-                         .FirstAsync() ?? throw new KeyNotFoundException($"Itinerary ID {itineraryId} not found when fetching most recent event.");        
+                        //  .Skip(1)
+                         .FirstOrDefaultAsync();
         }
 
         public async Task<Event> PatchEventAsync(long itineraryId, long eventId, Event updatedEvent)

@@ -11,8 +11,8 @@ namespace Traverse.Models.Dto
         public DateTime EventDate { get; set; }
         public string EventTimeZone { get; set; }
         public bool IsTransportation { get; set; }
-        public short? Duration { get; set; }
-        public short UserDefinedOrder { get; set; }
+        public float? Duration { get; set; }
+        public short? UserDefinedOrder { get; set; }
         public long ItineraryId { get; set; }
 
         public EventDto()

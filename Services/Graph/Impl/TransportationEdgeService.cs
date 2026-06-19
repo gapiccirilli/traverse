@@ -1,26 +1,29 @@
+using Traverse.Models;
 using Traverse.Models.Dto;
 using Traverse.Models.Graph;
 using Traverse.Providers;
+using Traverse.Repository;
 using Traverse.Repository.Graph;
 using Traverse.Services.Cache;
+using Traverse.Utility.Impl;
 
 namespace Traverse.Services.Graph.Impl
 {
     public class TransportationEdgeService : IEdgeService<EventDto, Transportation>
     {
         private readonly IMapProvider<EventDto, Transportation> _mapProvider;
-        private readonly IEventService _eventService;
+        private readonly IEventRepository _eventRepository;
         private readonly IEdgeRepository<Transportation> _edgeRepository;
         private readonly ICacheService _cacheService;
         private const string OPTIMIZED_CACHE_KEY = "itinerary:{0}:transportation:optimized";
         private const string USER_DEFINED_TRANSPORT_CACHE_KEY = "itinerary:{0}:transportation";
         private static readonly TimeSpan EDGE_CACHE_EXPIRY = new(1, 0, 0);
 
-        public TransportationEdgeService(IMapProvider<EventDto, Transportation> mapProvider, IEventService eventService, 
+        public TransportationEdgeService(IMapProvider<EventDto, Transportation> mapProvider, IEventRepository eventRepository, 
                IEdgeRepository<Transportation> edgeRepository, ICacheService cacheService)
         {
             _mapProvider = mapProvider;
-            _eventService = eventService;
+            _eventRepository = eventRepository;
             _edgeRepository = edgeRepository;
             _cacheService = cacheService;
         }
@@ -29,7 +32,7 @@ namespace Traverse.Services.Graph.Impl
         {
             var cacheKey = string.Format(OPTIMIZED_CACHE_KEY, id);
 
-            IEnumerable<EventDto> eventNodes = await _eventService.GetAllEventsAsync(id);
+            IEnumerable<EventDto> eventNodes = (await _eventRepository.GetAllEventsAsync(id)).Select(EventMapper.MapFrom);
 
             IEnumerable<Transportation> edges = await _mapProvider.OptimizeAsync(node, eventNodes.Where(n => n.Id != node.Id));
 
@@ -43,13 +46,13 @@ namespace Traverse.Services.Graph.Impl
             await _edgeRepository.SaveEdgesAsync(edges);
         }
 
-        public async Task BuildEdgeAsync(EventDto node, long id)
+        public async Task BuildEdgeAsync(EventDto toNode, EventDto? fromNode, long id)
         {
+            if (fromNode is null) return;
+
             var cacheKey = string.Format(USER_DEFINED_TRANSPORT_CACHE_KEY, id);
 
-            EventDto previousNode = await _eventService.GetMostRecentEventAsync(id);
-
-            Transportation edge = await _mapProvider.GetEtasAsync(node, previousNode);
+            Transportation edge = await _mapProvider.GetEtasAsync(toNode, fromNode);
             
             var currentCachedEdges = await GetEdges(id, USER_DEFINED_TRANSPORT_CACHE_KEY) ?? [];
             var mergedEdges = currentCachedEdges.Append(edge);

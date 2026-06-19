@@ -24,10 +24,10 @@ namespace Traverse.Services.Graph.Impl
 
         public async Task<ItineraryGraph> Optimize(long optParam)
         {
-            IEnumerable<EventDto> events = await _eventService.GetAllEventsAsync(optParam);
-            IEnumerable<Transportation> edges = await _transportationEdgeService.GetEdges(optParam);
+            // IEnumerable<EventDto> events = await _eventService.GetAllEventsAsync(optParam);
+            // IEnumerable<Transportation> edges = await _transportationEdgeService.GetEdges(optParam);
 
-            var itineraryGraph = _itineraryGraphService.BuildGraph(events, edges);
+            // var itineraryGraph = _itineraryGraphService.BuildGraph(events, edges);
             
             return new ItineraryGraph();
         }

@@ -22,11 +22,18 @@ namespace Traverse.Services.Impl
             
             newEvent.EventTimeZone = await _timeZoneService.GetTimeZoneAsync(newEvent.Coordinates.Latitude, newEvent.Coordinates.Longitude);
 
-            _etaJobClient.Enqueue<IEdgeService<EventDto, Transportation>>(service => service.BuildEdgesAsync(newEvent, itineraryId));
+            Event? previousNodeEntity = await _eventRepository.GetMostRecentEventAsync(itineraryId);
+            EventDto? previousNode = previousNodeEntity is not null ? EventMapper.MapFrom(previousNodeEntity) : null;
 
-            await _transporationEdgeServce.BuildEdgeAsync(newEvent, itineraryId);
+            newEvent.UserDefinedOrder = (short?)(previousNodeEntity is not null ? previousNodeEntity.UserDefinedOrder + 1 : 1);
+
+            var savedEvent = EventMapper.MapFrom(await _eventRepository.CreateEventAsync(itineraryId, EventMapper.MapTo(newEvent)));
+
+            // _etaJobClient.Enqueue<IEdgeService<EventDto, Transportation>>(service => service.BuildEdgesAsync(savedEvent, itineraryId));
+
+            await _transporationEdgeServce.BuildEdgeAsync(savedEvent, previousNode, itineraryId);
             
-            return EventMapper.MapFrom(await _eventRepository.CreateEventAsync(itineraryId, EventMapper.MapTo(newEvent)));
+            return savedEvent;
         }
 
         public async Task DeleteEventAsync(long itineraryId, long eventId)

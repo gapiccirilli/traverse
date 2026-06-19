@@ -5,7 +5,7 @@ namespace Traverse.Repository
     public interface IEventRepository
     {
         Task<Event> GetEventByIdAsync(long itineraryId, long eventId);
-        Task<Event> GetMostRecentEventAsync(long itineraryId);
+        Task<Event?> GetMostRecentEventAsync(long itineraryId);
         Task<IEnumerable<Event>> GetAllEventsAsync(long itineraryId);
         Task<Event> CreateEventAsync(long itineraryId, Event newEvent);
         Task<Event> UpdateEventAsync(long itineraryId, long eventId, Event updatedEvent);

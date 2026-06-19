@@ -15,5 +15,16 @@ namespace Traverse.DbContexts
         public DbSet<Rating> Ratings { get; set; }
 
         public DbSet<Transportation> Transportations { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Transportation>()
+                .Property(e => e.TransportMode)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Transportation>()
+                .Property(e => e.DistanceUnit)
+                .HasConversion<string>();
+        }
     }
 }

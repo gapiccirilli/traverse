@@ -15,8 +15,8 @@ namespace Traverse.Models
         [NotMapped]
         public TimeZoneInfo TimeZoneObj { get; set; }
         public string EventTimeZone { get; set; }
-        public short? Duration { get; set; }
-        public short UserDefinedOrder { get; set; }
+        public float? Duration { get; set; }
+        public short? UserDefinedOrder { get; set; }
         public bool IsTransportation { get; set; } = false;
         public long ItineraryId { get; set; }
 

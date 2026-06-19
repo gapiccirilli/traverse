@@ -17,6 +17,7 @@ namespace Traverse.Utility.Impl
                 EventDate = input.EventDate,
                 IsTransportation = input.IsTransportation,
                 Duration = input.Duration,
+                UserDefinedOrder = input.UserDefinedOrder,
                 ItineraryId = input.ItineraryId
             };
         }
@@ -32,6 +33,7 @@ namespace Traverse.Utility.Impl
                 EventDate = input.EventDate.ToUniversalTime(),
                 IsTransportation = input.IsTransportation,
                 Duration = input.Duration,
+                UserDefinedOrder = input.UserDefinedOrder,
                 ItineraryId = input.ItineraryId
             };
         }

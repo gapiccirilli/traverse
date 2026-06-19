@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Traverse.Models.Graph
 {
+    [Table("transportations", Schema = "core")]
     public class Transportation
     {
         public long Id { get; set; }
