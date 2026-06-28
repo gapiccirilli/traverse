@@ -1,6 +1,14 @@
 
+using Newtonsoft.Json;
+
 namespace Traverse.Models.Records
 {
-    public record Coordinate(double Latitude, double Longitude) {}
+    public record Coordinate 
+    {
+        [JsonProperty("latitude")]
+        public double Latitude {get; init; }
+        [JsonProperty("longitude")]
+        public double Longitude {get; init; }
+    }
 
 }

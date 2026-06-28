@@ -20,7 +20,7 @@ namespace Traverse.Providers
         
         public abstract Task<GeocodeResult> GeocodeAsync(string address);
 
-        public abstract Task<Transportation> GetEtasAsync(EventDto currentNode, EventDto previousNode);
+        public abstract Task<EtaResult> GetEtasAsync(Coordinate origin, Coordinate destination);
 
         public abstract Task<RouteResult> GetRoutesAsync(Coordinate origin, Coordinate destination);
 

@@ -1,10 +1,13 @@
+using Newtonsoft.Json;
+
 namespace Traverse.Models.Records.Maps
 {
     public record RouteResult(
-        Coordinate Origin,
-        Coordinate Destination,
+        CoordinateWrapper Origin,
+        CoordinateWrapper Destination,
         IReadOnlyList<Route> Routes,
         IReadOnlyList<Step> Steps,
-        Dictionary<int, IReadOnlyList<Coordinate>> StepPaths
+        IReadOnlyList<IReadOnlyList<Coordinate>> StepPaths,
+        Dictionary<int, IReadOnlyList<Coordinate>> StepPathsDictionary
     );
 }

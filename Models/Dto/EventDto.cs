@@ -19,7 +19,11 @@ namespace Traverse.Models.Dto
         {
             this.EventName = string.Empty;
             this.Location = string.Empty;
-            this.Coordinates = new Records.Coordinate(0, 0);
+            this.Coordinates = new Records.Coordinate()
+                {
+                    Latitude = 0,
+                    Longitude = 0
+                };
             this.EventTimeZone = TimeZoneInfo.Local.Id;
 ;
         }

@@ -1,7 +1,10 @@
+using Microsoft.Extensions.Options;
 using Traverse.Models;
 using Traverse.Models.Dto;
 using Traverse.Models.Graph;
+using Traverse.Options;
 using Traverse.Providers;
+using Traverse.Providers.Impl;
 using Traverse.Repository;
 using Traverse.Repository.Graph;
 using Traverse.Services.Cache;
@@ -15,17 +18,19 @@ namespace Traverse.Services.Graph.Impl
         private readonly IEventRepository _eventRepository;
         private readonly IEdgeRepository<Transportation> _edgeRepository;
         private readonly ICacheService _cacheService;
+        private readonly MapsOptions _options;
         private const string OPTIMIZED_CACHE_KEY = "itinerary:{0}:transportation:optimized";
         private const string USER_DEFINED_TRANSPORT_CACHE_KEY = "itinerary:{0}:transportation";
         private static readonly TimeSpan EDGE_CACHE_EXPIRY = new(1, 0, 0);
 
         public TransportationEdgeService(IMapProvider<EventDto, Transportation> mapProvider, IEventRepository eventRepository, 
-               IEdgeRepository<Transportation> edgeRepository, ICacheService cacheService)
+               IEdgeRepository<Transportation> edgeRepository, ICacheService cacheService, IOptions<MapsOptions> options)
         {
             _mapProvider = mapProvider;
             _eventRepository = eventRepository;
             _edgeRepository = edgeRepository;
             _cacheService = cacheService;
+            _options = options.Value;
         }
 
         public async Task BuildEdgesAsync(EventDto node, long id)
@@ -52,7 +57,7 @@ namespace Traverse.Services.Graph.Impl
 
             var cacheKey = string.Format(USER_DEFINED_TRANSPORT_CACHE_KEY, id);
 
-            Transportation edge = await _mapProvider.GetEtasAsync(toNode, fromNode);
+            Transportation edge = await CalculateEtas(toNode, fromNode);
             
             var currentCachedEdges = await GetEdges(id, USER_DEFINED_TRANSPORT_CACHE_KEY) ?? [];
             var mergedEdges = currentCachedEdges.Append(edge);
@@ -79,6 +84,31 @@ namespace Traverse.Services.Graph.Impl
         public Task<Transportation> GetEdge(long id)
         {
             throw new NotImplementedException();
+        }
+
+        private async Task<Transportation> CalculateEtas(EventDto toNode, EventDto fromNode)
+        {
+            var result = await _mapProvider.GetEtasAsync(fromNode.Coordinates, toNode.Coordinates);
+
+            var etas = result.Etas;
+
+                if (!etas.Any())
+                {
+                    throw new InvalidOperationException($"An eta result was expected from {nameof(AppleMapsProvider)} between " +
+                        $"origin {fromNode.Id} and destination {toNode.Id} but there were no results returned");
+                }
+                
+                var etaResult = etas.First();
+
+            return new Transportation()
+                {
+                    FromEventId = fromNode.Id,
+                    ToEventId = toNode.Id,
+                    WeightSeconds = etaResult.ExpectedTravelTimeSeconds,
+                    Distance = etaResult.DistanceMeters,
+                    DistanceUnit = DistanceUnit.Meters,
+                    ItineraryId = fromNode.ItineraryId
+                };
         }
     }
 }

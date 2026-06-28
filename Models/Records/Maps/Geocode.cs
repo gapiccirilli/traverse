@@ -1,8 +1,26 @@
 namespace Traverse.Models.Records.Maps
 {
     public record GeocodeResult(
+        IEnumerable<Place> Results
+    );
+
+    public record Place(
         Coordinate Coordinate,
+        DisplayMapRegion DisplayMapRegion,
         string Name,
+        StucturedAddress StructuredAddress,
+        string Country,
+        string CountryCode
+    );
+
+    public record DisplayMapRegion(
+        double SouthLatitude,
+        double WestLongitude,
+        double NorthLatitude,
+        double EastLongitude
+    );
+
+    public record StucturedAddress(
         string AdministrativeArea,
         string AdministrativeAreaCode,
         string Locality,
@@ -12,8 +30,6 @@ namespace Traverse.Models.Records.Maps
         string SubThoroughfare,
         string FullThoroughfare,
         string[] AreasOfInterest,
-        string[] DependentLocalities,
-        string Country,
-        string CountryCode
+        string[] DependentLocalities
     );
 }

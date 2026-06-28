@@ -22,6 +22,7 @@ using Traverse.Services.Maps;
 using Traverse.Services.Maps.Impl;
 using Traverse.Services.Timezone;
 using Traverse.Services.Timezone.Impl;
+using Newtonsoft.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,7 +53,8 @@ builder.Services.AddHangfire(config =>
 
 // converts exceptions to problem details responses when useExceptionHandler is used without path
 builder.Services.AddProblemDetails();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+                .AddNewtonsoftJson();
 
 builder.Services.AddSingleton<ITimeZoneService, GeoTimeZoneService>();
 
@@ -81,6 +83,7 @@ builder.Services.AddOptions<MapsOptions>()
     .ValidateOnStart();
 
 builder.Services.AddSingleton<IMapTokenService<string>, AppleMapsTokenService>();
+builder.Services.AddScoped<IMapService, AppleMapsService>();
 builder.Services.AddScoped<IEdgeService<EventDto, Transportation>, TransportationEdgeService>();
 builder.Services.AddScoped<IEdgeRepository<Transportation>, TransportationEdgeRepository>();
 builder.Services.AddScoped<IGraphService<ItineraryGraph, EventDto, Transportation>, ItineraryGraphService>();

@@ -32,7 +32,7 @@ namespace Traverse.Services.Graph.Impl
             return new ItineraryGraph();
         }
 
-        private IEnumerable<Transportation> BuildRouteEdges(Dictionary<long, IEnumerable<EtaWrapper>> routeEtas)
+        private IEnumerable<Transportation> BuildRouteEdges(Dictionary<long, IEnumerable<EtaResult>> routeEtas)
         {
             return [];
         }

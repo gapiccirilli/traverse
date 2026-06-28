@@ -1,10 +1,7 @@
-using System.Collections;
-using System.Diagnostics;
 using System.Net.Http.Headers;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using Traverse.Models;
+using Newtonsoft.Json.Linq;
 using Traverse.Models.Dto;
 using Traverse.Models.Graph;
 using Traverse.Models.Records;
@@ -27,41 +24,17 @@ namespace Traverse.Providers.Impl
 
         public async override Task<GeocodeResult> GeocodeAsync(string address)
         {
-            throw new NotImplementedException();
+            return await GetHttpResponseAsync<GeocodeResult>($"{_options.GeocodeApi}?q={address}");
         }
 
-        public async override Task<Transportation> GetEtasAsync(EventDto currentNode, EventDto previousNode)
+        public async override Task<EtaResult> GetEtasAsync(Coordinate origin, Coordinate destination)
         {
-            string originQuery = $"{previousNode.Coordinates.Latitude},{previousNode.Coordinates.Longitude}";
-            string destinationsQuery = $"{currentNode.Coordinates.Latitude},{currentNode.Coordinates.Longitude}";
-            string uri = $"{_options.EtaApi}?origin={originQuery}&destinations={destinationsQuery}";
-
-            var wrapper = await GetHttpResponseAsync<EtaWrapper>(uri);
-
-            var etas = wrapper.Etas;
-
-                if (!etas.Any())
-                {
-                    throw new InvalidOperationException($"An eta result was expected from {nameof(AppleMapsProvider)} between " +
-                        $"origin {previousNode.Id} and destination {currentNode.Id} but there were no results returned");
-                }
-                
-                var etaResult = etas.First();
-
-            return new Transportation()
-                {
-                    FromEventId = previousNode.Id,
-                    ToEventId = currentNode.Id,
-                    WeightSeconds = etaResult.ExpectedTravelTimeSeconds,
-                    Distance = etaResult.DistanceMeters,
-                    DistanceUnit = DistanceUnit.Meters,
-                    ItineraryId = previousNode.ItineraryId
-                };
+            return await GetHttpResponseAsync<EtaResult>($"{_options.EtaApi}?origin={origin.Latitude},{origin.Longitude}&destinations={destination.Latitude},{destination.Longitude}");
         }
 
         public async override Task<RouteResult> GetRoutesAsync(Coordinate origin, Coordinate destination)
         {
-            throw new NotImplementedException();
+            return await GetHttpResponseAsync<RouteResult>($"{_options.DirectionsApi}?origin={origin.Latitude},{origin.Longitude}&destination={destination.Latitude},{destination.Longitude}");
         }
 
         public async override Task<IEnumerable<Transportation>> OptimizeAsync(EventDto origin, IEnumerable<EventDto> nodes)
@@ -71,7 +44,7 @@ namespace Traverse.Providers.Impl
                 return [];
             }
 
-            List<Task<EtaWrapper>> tasks = [];
+            List<Task<EtaResult>> tasks = [];
             List<Transportation> edges = [];
 
             string originQuery = $"{origin.Coordinates.Latitude},{origin.Coordinates.Longitude}";
@@ -83,14 +56,14 @@ namespace Traverse.Providers.Impl
                 string originToDestinationUri = $"{_options.EtaApi}?origin={originQuery}&destinations={destinationsQuery}";
                 string destinationToOriginUri = $"{_options.EtaApi}?origin={destinationsQuery}&destinations={originQuery}";
 
-                tasks.Add(GetHttpResponseAsync<EtaWrapper>(originToDestinationUri).ContinueWith(task =>
+                tasks.Add(GetHttpResponseAsync<EtaResult>(originToDestinationUri).ContinueWith(task =>
                 {
                     task.Result.FromEventId = origin.Id;
                     task.Result.ToEventId = eventNode.Id;
                     return task.Result;
                 }));
 
-                tasks.Add(GetHttpResponseAsync<EtaWrapper>(destinationToOriginUri).ContinueWith(task =>
+                tasks.Add(GetHttpResponseAsync<EtaResult>(destinationToOriginUri).ContinueWith(task =>
                 {
                     task.Result.FromEventId = eventNode.Id;
                     task.Result.ToEventId = origin.Id;

@@ -20,9 +20,17 @@ namespace Traverse.Models.Dto
         {
             this.TripName = string.Empty;
             this.ArrivalLocation = string.Empty;
-            this.ArrivalCoordinates = new Records.Coordinate(0, 0);
+            this.ArrivalCoordinates = new Records.Coordinate()
+                {
+                    Latitude = 0,
+                    Longitude = 0
+                };
             this.DepartureLocation = string.Empty;
-            this.DepartureCoordinates = new Records.Coordinate(0, 0);
+            this.DepartureCoordinates = new Records.Coordinate()
+                {
+                    Latitude = 0,
+                    Longitude = 0
+                };
             this.TripStartTimezone = TimeZoneInfo.Local.StandardName;
             this.TripEndTimezone = TimeZoneInfo.Local.StandardName;
         }

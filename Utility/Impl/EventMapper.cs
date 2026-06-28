@@ -13,7 +13,11 @@ namespace Traverse.Utility.Impl
                 Id = input.Id,
                 EventName = input.EventName,
                 Location = input.Location,
-                Coordinates = new Models.Records.Coordinate(input.Coordinates.X, input.Coordinates.Y),
+                Coordinates = new Models.Records.Coordinate()
+                {
+                    Latitude = input.Coordinates.X,
+                    Longitude = input.Coordinates.Y
+                },
                 EventDate = input.EventDate,
                 IsTransportation = input.IsTransportation,
                 Duration = input.Duration,

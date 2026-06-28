@@ -1,6 +1,6 @@
 namespace Traverse.Models.Records.Maps
 {
-    public record EtaResult(
+    public record Eta(
         Coordinate Destination,
         int DistanceMeters,
         int ExpectedTravelTimeSeconds,

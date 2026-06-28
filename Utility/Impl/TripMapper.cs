@@ -13,9 +13,17 @@ namespace Traverse.Utility.Impl
                 Id = input.Id,
                 TripName = input.TripName,
                 ArrivalLocation = input.ArrivalLocation,
-                ArrivalCoordinates = new Models.Records.Coordinate(input.ArrivalCoordinates.X, input.ArrivalCoordinates.Y),
+                ArrivalCoordinates = new Models.Records.Coordinate()
+                {
+                    Latitude = input.ArrivalCoordinates.X,
+                    Longitude = input.ArrivalCoordinates.Y
+                },
                 DepartureLocation = input.DepartureLocation,
-                DepartureCoordinates = new Models.Records.Coordinate(input.DepartureCoordinates.X, input.DepartureCoordinates.Y),
+                DepartureCoordinates = new Models.Records.Coordinate()
+                {
+                    Latitude = input.DepartureCoordinates.X,
+                    Longitude = input.DepartureCoordinates.Y
+                },
                 TripStart = input.TripStart,
                 TripEnd = input.TripEnd
             };
